@@ -58,15 +58,7 @@ void CommLineArgs(int argc,
 
 int isNumber(const char * str);
 
-void f(
-        int source,
-        int n,
-        int *edge,
-        int *dist,
-				MPI_Comm mcw
-      );
-
-int choose(MPI_Comm mcw, int *dist, int n, int *found);
+void printGraph(int n, int * graph, int print)
 
 int min(int i, int j);
 
@@ -76,10 +68,6 @@ void makeGraph(int n, int * edge, int max_num, int connectivity);
 
 int addWithInfinity(int A, int B);
 
-void Reduce_Bcast_Distances(MPI_Comm mcw, int * dist, int n);
-
 int getMax(int world_size);
-
-int Reduce_Bcast_J(MPI_Comm mcw, int localMinimum, int * dist, int n);
 
 #endif

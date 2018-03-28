@@ -2,77 +2,56 @@
 
 int main(int argc, char ** argv)
 {
-  MPI_Init(&argc,&argv);
-  int world_rank;
-  MPI_Comm_rank(MCW, &world_rank);
-  int world_size;
-  MPI_Comm_size(MCW, &world_size);
+  // MPI_Init(&argc,&argv);
+  // int world_rank;
+  // MPI_Comm_rank(MCW, &world_rank);
+  // int world_size;
+  // MPI_Comm_size(MCW, &world_size);
 
 
 
-  int n, source, i, j, row, seed, max_num, connectivity, print;
+  int n, source, i, j, k, row, seed, max_num, connectivity, print;
 
   CommLineArgs(argc,argv,&seed,&max_num,&n,&source,&connectivity,&print);
 
   srand(seed);
-  int * edge = (int *)calloc(n * n,sizeof(int));
-  int * dist = (int *)calloc(n,sizeof(int));
+  int * W0 = (int *)calloc(n * n,sizeof(int));
+  int * W = (int *)calloc(n * n,sizeof(int));
 
-  if (world_rank == 0) printf("n = %d, source = %d, seed = %d, max_num = %d, connectivity = %d, print = %d\n\n",n,source,seed,max_num,connectivity,print);
+  printf("n = %d, source = %d, seed = %d, max_num = %d, connectivity = %d, print = %d\n\n",n,source,seed,max_num,connectivity,print);
 
-  makeGraph(n,edge,max_num,connectivity);
+  makeGraph(n,W0,max_num,connectivity);
 
-  if (print == 1 && world_rank == 0)
-  {
-    for (i = -1; i < n; i++)
-    {
-      if (i == -1) { printf("\t "); }
-      else { printf("\t%d",i); }
-    }
-    printf("\n");
-    for (i = 0; i < n; i++)
-    {
-      row = i * n;
-      for (j = -1; j < n; j++)
-      {
-        if (j == -1) { printf("\t%d",i); }
-        else
-        {
-          if (edge[row + j] == (int)INFINITY)
-          {
-            printf("\t--,");
-          }
-          else
-          {
-            printf("\t%d,",edge[row + j]);
-          }
-        }
-      }
-      printf("\n");
-    }
-  }
+  printf("W0:\n");
+  printGraph(n,WO,print);
 
-  if (world_rank == 0 && print) printf("\n");
-  f(source,n,edge,dist,MCW);
-  if (world_rank == 0 && print) printf("\n");
-
-  if (world_rank == 0)
+  for (k = 0; k < n; k++)
   {
     for (i = 0; i < n; i++)
     {
-      if (dist[i] == (int)INFINITY || dist[i] < 0)
+      for (j = 0; j < n; j++)
       {
-        printf("%d => --,\n",i);
+        W[(i * n) + j] = min(W0[(i * n) + j],W0[(i * n) + k] + W0[(k * n) + j]);
       }
-      else
+    }
+
+    for (i = 0; i < n; i++)
+    {
+      for (j = 0; j < n; j++)
       {
-        printf("%d => %d,\n",i,dist[i]);
+        W0[(i * n) + j] = W[(i * n) + j];
       }
     }
   }
 
-  free(edge);
-  free(dist);
-  MPI_Finalize();
+  printf("W0:\n");
+  printGraph(n,WO,print);
+  printf("\n***************************************************************\n");
+  printf("W:\n");
+  printGraph(n,W,print);
+
+  free(W0);
+  free(W);
+  // MPI_Finalize();
   return 0;
 }
