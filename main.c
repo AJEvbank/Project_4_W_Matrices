@@ -10,18 +10,18 @@ int main(int argc, char ** argv)
 
 
 
-  int n, source, i, j, k, seed, max_num, connectivity, print;
+  int n, source, i, j, k, seed, max_num, connectivity, print, part;
 
-  CommLineArgs(argc,argv,&seed,&max_num,&n,&source,&connectivity,&print);
+  CommLineArgs(argc,argv,&seed,&max_num,&n,&source,&connectivity,&part,&print);
 
   srand(seed);
   int * W0 = (int *)calloc(n * n,sizeof(int));
   int * W = (int *)calloc(n * n,sizeof(int));
 
-  printf("n = %d, source = %d, seed = %d, max_num = %d, connectivity = %d, print = %d\n\n",n,source,seed,max_num,connectivity,print);
+  printf("n = %d, source = %d, seed = %d, max_num = %d, connectivity = %d, part = %d, print = %d\n\n",n,source,seed,max_num,connectivity,part,print);
 
-  makeGraph(n,W0,max_num,connectivity);
-  makeGraph(n,W,max_num,0);
+  makeGraph(n,W0,max_num,connectivity,part);
+  makeGraph(n,W,max_num,0,0);
 
   printf("W0:\n");
   printGraph(n,W0,print);

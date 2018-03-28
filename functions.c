@@ -48,12 +48,24 @@ int min(int i, int j)
   return j;
 }
 
-int isConnected(int connectivity)
+int isConnected(int connectivity, int part)
 {
-  return ((rand() % connectivity) == 0);
+  if (connectivity <= part)
+  {
+    return 1;
+  }
+  int i, rdn = rand();
+  for (i = 0; i < part; i++)
+  {
+    if ((rdn % connectivity) == i)
+    {
+      return 1;
+    }
+  }
+  return 0;
 }
 
-void makeGraph(int n, int * edge, int max_num, int connectivity)
+void makeGraph(int n, int * edge, int max_num, int connectivity, int part)
 {
   int i,j,row;
   if (connectivity > 0)
@@ -63,7 +75,7 @@ void makeGraph(int n, int * edge, int max_num, int connectivity)
       row = i * n;
       for (j = 0; j < n; j++)
       {
-        if (i != j && isConnected(connectivity))
+        if (i != j && isConnected(connectivity,part))
         {
           edge[row + j] = QUAN;
         }

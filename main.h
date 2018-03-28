@@ -21,6 +21,7 @@
 #define N 10
 #define SOURCE 0
 #define CONNECTIVITY 1
+#define PART 1
 
 #define DEBUG_F 0
 #define DEBUG_CHOOSE 0
@@ -45,7 +46,6 @@ enum isNumStates {
 	DECIMAL,
 	ERROR
 };
-
 void CommLineArgs(int argc,
                   char ** argv,
                   int *seed,
@@ -53,6 +53,7 @@ void CommLineArgs(int argc,
                   int *n,
 									int *source,
                   int *connectivity,
+                  int *part,
                   int *print
                  );
 
@@ -62,9 +63,9 @@ void printGraph(int n, int * graph, int print);
 
 int min(int i, int j);
 
-int isConnected(int connectivity);
+int isConnected(int connectivity, int part);
 
-void makeGraph(int n, int * edge, int max_num, int connectivity);
+void makeGraph(int n, int * edge, int max_num, int connectivity, int part);
 
 int addWithInfinity(int A, int B);
 
