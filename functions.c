@@ -144,7 +144,7 @@ void makeGraphTotal(int n, int * graph, int max_num, int connectivity, int part)
       }
       if(hasConnectionCol == 0)
       {
-        graph[(rand() % n) + i] = QUAN;
+        graph[((rand() % n) * n) + i] = QUAN;
       }
     }
   }

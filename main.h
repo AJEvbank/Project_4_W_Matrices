@@ -23,6 +23,7 @@
 #define CONNECTIVITY 1
 #define PART 1
 #define INF (int)INFINITY
+#define FULL 0
 
 
 
@@ -53,6 +54,7 @@ void CommLineArgs(int argc,
 									int *source,
                   int *connectivity,
                   int *part,
+                  int *full,
                   int *print
                  );
 
