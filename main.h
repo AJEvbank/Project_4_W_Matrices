@@ -22,10 +22,9 @@
 #define SOURCE 0
 #define CONNECTIVITY 1
 #define PART 1
+#define INF (int)INFINITY
 
-#define DEBUG_F 0
-#define DEBUG_CHOOSE 0
-#define DEBUG_CH_LOOP 0
+
 
 // #define TIME 0
 // #define CORRECT 0
@@ -66,6 +65,8 @@ int min(int i, int j);
 int isConnected(int connectivity, int part);
 
 void makeGraph(int n, int * edge, int max_num, int connectivity, int part);
+
+void makeGraphTotal(int n, int * edge, int max_num, int connectivity, int part);
 
 int addWithInfinity(int A, int B);
 

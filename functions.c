@@ -65,7 +65,7 @@ int isConnected(int connectivity, int part)
   return 0;
 }
 
-void makeGraph(int n, int * edge, int max_num, int connectivity, int part)
+void makeGraph(int n, int * graph, int max_num, int connectivity, int part)
 {
   int i,j,row;
   if (connectivity > 0)
@@ -77,11 +77,11 @@ void makeGraph(int n, int * edge, int max_num, int connectivity, int part)
       {
         if (i != j && isConnected(connectivity,part))
         {
-          edge[row + j] = QUAN;
+          graph[row + j] = QUAN;
         }
         else
         {
-          edge[row + j] = (int)INFINITY;
+          graph[row + j] = INF;
         }
       }
     }
@@ -93,7 +93,69 @@ void makeGraph(int n, int * edge, int max_num, int connectivity, int part)
       row = i * n;
       for (j = 0; j < n; j++)
       {
-        edge[row + j] = (int)INFINITY;
+        graph[row + j] = part;
+      }
+    }
+  }
+  return;
+}
+
+void makeGraphTotal(int n, int * graph, int max_num, int connectivity, int part)
+{
+  int i,j,row,col,hasConnectionRow,hasConnectionCol;
+  if (connectivity > 0)
+  {
+    for (i = 0; i < n; i++)
+    {
+      row = i * n;
+      for (j = 0; j < n; j++)
+      {
+        if (i != j && isConnected(connectivity,part))
+        {
+          graph[row + j] = QUAN;
+        }
+        else
+        {
+          graph[row + j] = INF;
+        }
+      }
+    }
+    // Now check to make sure there is an edge from and to every node.
+    for (i = 0; i < n; i++)
+    {
+      row = i * n;
+      hasConnectionRow = 0;
+      hasConnectionCol = 0;
+      for (j = 0; j < n; j++)
+      {
+        col = j * n;
+        if(graph[row + j] != INF)
+        {
+          hasConnectionRow = 1;
+        }
+        if(graph[col + i] != INF)
+        {
+          hasConnectionCol = 1;
+        }
+      }
+      if(hasConnectionRow == 0)
+      {
+        graph[row + (rand() % n)] = QUAN;
+      }
+      if(hasConnectionCol == 0)
+      {
+        graph[(rand() % n) + i] = QUAN;
+      }
+    }
+  }
+  else
+  {
+    for (i = 0; i < n; i++)
+    {
+      row = i * n;
+      for (j = 0; j < n; j++)
+      {
+        graph[row + j] = part;
       }
     }
   }
@@ -102,11 +164,11 @@ void makeGraph(int n, int * edge, int max_num, int connectivity, int part)
 
 int addWithInfinity(int A, int B)
 {
-  if (A == (int)INFINITY)
+  if (A == INF)
   {
     return A;
   }
-  else if (B == (int)INFINITY)
+  else if (B == INF)
   {
     return B;
   }

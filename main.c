@@ -21,7 +21,7 @@ int main(int argc, char ** argv)
   printf("n = %d, source = %d, seed = %d, max_num = %d, connectivity = %d, part = %d, print = %d\n\n",n,source,seed,max_num,connectivity,part,print);
 
   makeGraph(n,W0,max_num,connectivity,part);
-  makeGraph(n,W,max_num,0,0);
+  makeGraph(n,W,max_num,0,INF);
 
   printf("W0:\n");
   printGraph(n,W0,print);
