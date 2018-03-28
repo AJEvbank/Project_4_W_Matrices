@@ -23,13 +23,13 @@ void printGraph(int n, int * graph, int print)
         if (j == -1) { printf("\t%d",i); }
         else
         {
-          if (edge[row + j] == (int)INFINITY)
+          if (graph[row + j] == (int)INFINITY)
           {
             printf("\t--,");
           }
           else
           {
-            printf("\t%d,",edge[row + j]);
+            printf("\t%d,",graph[row + j]);
           }
         }
       }
@@ -56,21 +56,36 @@ int isConnected(int connectivity)
 void makeGraph(int n, int * edge, int max_num, int connectivity)
 {
   int i,j,row;
-  for (i = 0; i < n; i++)
+  if (connectivity > 0)
   {
-    row = i * n;
-    for (j = 0; j < n; j++)
+    for (i = 0; i < n; i++)
     {
-      if (i != j && isConnected(connectivity))
+      row = i * n;
+      for (j = 0; j < n; j++)
       {
-        edge[row + j] = QUAN;
+        if (i != j && isConnected(connectivity))
+        {
+          edge[row + j] = QUAN;
+        }
+        else
+        {
+          edge[row + j] = (int)INFINITY;
+        }
       }
-      else
+    }
+  }
+  else
+  {
+    for (i = 0; i < n; i++)
+    {
+      row = i * n;
+      for (j = 0; j < n; j++)
       {
         edge[row + j] = (int)INFINITY;
       }
     }
   }
+  return;
 }
 
 int addWithInfinity(int A, int B)

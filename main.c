@@ -10,7 +10,7 @@ int main(int argc, char ** argv)
 
 
 
-  int n, source, i, j, k, row, seed, max_num, connectivity, print;
+  int n, source, i, j, k, seed, max_num, connectivity, print;
 
   CommLineArgs(argc,argv,&seed,&max_num,&n,&source,&connectivity,&print);
 
@@ -21,9 +21,10 @@ int main(int argc, char ** argv)
   printf("n = %d, source = %d, seed = %d, max_num = %d, connectivity = %d, print = %d\n\n",n,source,seed,max_num,connectivity,print);
 
   makeGraph(n,W0,max_num,connectivity);
+  makeGraph(n,W,max_num,0);
 
   printf("W0:\n");
-  printGraph(n,WO,print);
+  printGraph(n,W0,print);
 
   for (k = 0; k < n; k++)
   {
@@ -31,7 +32,10 @@ int main(int argc, char ** argv)
     {
       for (j = 0; j < n; j++)
       {
-        W[(i * n) + j] = min(W0[(i * n) + j],W0[(i * n) + k] + W0[(k * n) + j]);
+        if (i != j)
+        {
+          W[(i * n) + j] = min(W0[(i * n) + j],addWithInfinity(W0[(i * n) + k], W0[(k * n) + j]));
+        }
       }
     }
 
@@ -44,8 +48,9 @@ int main(int argc, char ** argv)
     }
   }
 
+  printf("\n\n");
   printf("W0:\n");
-  printGraph(n,WO,print);
+  printGraph(n,W0,print);
   printf("\n***************************************************************\n");
   printf("W:\n");
   printGraph(n,W,print);

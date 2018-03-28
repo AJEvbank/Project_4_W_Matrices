@@ -58,7 +58,7 @@ void CommLineArgs(int argc,
 
 int isNumber(const char * str);
 
-void printGraph(int n, int * graph, int print)
+void printGraph(int n, int * graph, int print);
 
 int min(int i, int j);
 

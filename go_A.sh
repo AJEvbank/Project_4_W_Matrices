@@ -5,7 +5,8 @@ echo "**************************************************************************
 
 
 
-time mpirun -np 5 ./main -n 15 -max_num 5 -connectivity 2 -seed 69 -source 7
+# time mpirun -np 5 ./main -n 15 -max_num 5 -connectivity 2 -seed 69 -source 7
+./main -n 3 -max_num 5 -connectivity 1 -seed 722 -print
 
 echo "**************************************************************************************************************************************"
 
