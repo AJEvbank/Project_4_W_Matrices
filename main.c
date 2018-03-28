@@ -2,44 +2,52 @@
 
 int main(int argc, char ** argv)
 {
-  // MPI_Init(&argc,&argv);
-  // int world_rank;
-  // MPI_Comm_rank(MCW, &world_rank);
-  // int world_size;
-  // MPI_Comm_size(MCW, &world_size);
+  MPI_Init(&argc,&argv);
+  int world_rank;
+  MPI_Comm_rank(MCW, &world_rank);
+  int world_size;
+  MPI_Comm_size(MCW, &world_size);
 
 
 
-  int n, source, i, j, k, seed, max_num, connectivity, print, part, full;
+  int n, source, i, j, k, seed, max_num, connectivity, print, part, full, rootP, slice, start, end;
 
   CommLineArgs(argc,argv,&seed,&max_num,&n,&source,&connectivity,&part,&full,&print);
 
   srand(seed);
-  int * W0 = (int *)calloc(n * n,sizeof(int));
-  int * W = (int *)calloc(n * n,sizeof(int));
+  rootP = (int)sqrt((double)world_size);
+  int * W0 = (int *)calloc(rootP * rootP,sizeof(int));
+  int * W = (int *)calloc(rootP * rootP,sizeof(int));
+  slice = n/rootP;
+  start = slice * world_rank;
+  end = start + slice;
+  int * kthRow = (int *)calloc(n,sizeof(int));
+  int * kthCol = (int *)calloc(n,sizeof(int));
 
   printf("n = %d, source = %d, seed = %d, max_num = %d, connectivity = %d, part = %d, print = %d, full = %d\n\n",
                                                                     n,source,seed,max_num,connectivity,part,print,full);
 
   if (full == 1)
   {
-    makeGraphTotal(n,W0,max_num,connectivity,part);
+    makeGraphTotal(slice,W0,max_num,connectivity,part);
   }
   else
   {
-    makeGraph(n,W0,max_num,connectivity,part);
+    makeGraph(slice,W0,max_num,connectivity,part);
   }
 
-  makeGraph(n,W,max_num,0,INF);
+  makeGraph(slice,W,max_num,0,INF);
 
   printf("W0:\n");
-  printGraph(n,W0,print);
+  // Parallelize the print function.
+  printGraph(slice,W0,print);
 
   for (k = 0; k < n; k++)
   {
-    for (i = 0; i < n; i++)
+    // Parallelize kthRow and kthCol here.
+    for (i = start; i < end; i++)
     {
-      for (j = 0; j < n; j++)
+      for (j = start; j < end; j++)
       {
         if (i != j)
         {
@@ -48,9 +56,9 @@ int main(int argc, char ** argv)
       }
     }
 
-    for (i = 0; i < n; i++)
+    for (i = start; i < end; i++)
     {
-      for (j = 0; j < n; j++)
+      for (j = start; j < end; j++)
       {
         W0[(i * n) + j] = W[(i * n) + j];
       }
@@ -66,6 +74,8 @@ int main(int argc, char ** argv)
 
   free(W0);
   free(W);
-  // MPI_Finalize();
+  free(kthCol);
+  free(kthRow);
+  MPI_Finalize();
   return 0;
 }
