@@ -10,9 +10,9 @@ int main(int argc, char ** argv)
 
 
 
-  int n, source, i, j, k, seed, max_num, connectivity, print, part, full, rootP, slice, start, end;
+  int n, i, j, k, seed, max_num, connectivity, print, part, full, rootP, slice, start, end;
 
-  CommLineArgs(argc,argv,&seed,&max_num,&n,&source,&connectivity,&part,&full,&print);
+  CommLineArgs(argc,argv,&seed,&max_num,&n,&connectivity,&part,&full,&print);
 
   srand(seed);
   rootP = (int)sqrt((double)world_size);
@@ -24,8 +24,8 @@ int main(int argc, char ** argv)
   int * kthRow = (int *)calloc(n,sizeof(int));
   int * kthCol = (int *)calloc(n,sizeof(int));
 
-  printf("n = %d, source = %d, seed = %d, max_num = %d, connectivity = %d, part = %d, print = %d, full = %d\n\n",
-                                                                    n,source,seed,max_num,connectivity,part,print,full);
+  printf("n = %d, seed = %d, max_num = %d, connectivity = %d, part = %d, print = %d, full = %d\n\n",
+                                                                    n,seed,max_num,connectivity,part,print,full);
 
   if (full == 1)
   {
@@ -45,13 +45,14 @@ int main(int argc, char ** argv)
   for (k = 0; k < n; k++)
   {
     // Parallelize kthRow and kthCol here.
+    getkRowAndCol(MCW,n,k,kthCol,kthRow);
     for (i = start; i < end; i++)
     {
       for (j = start; j < end; j++)
       {
         if (i != j)
         {
-          W[(i * n) + j] = min(W0[(i * n) + j],addWithInfinity(W0[(i * n) + k], W0[(k * n) + j]));
+          W[(i * n) + j] = min(W0[(i * n) + j],addWithInfinity(kthCol[i], kthRow[j]));
         }
       }
     }

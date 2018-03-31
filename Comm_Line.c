@@ -9,21 +9,19 @@ void CommLineArgs(int argc,
                   int *seed,
                   int *max_num,
                   int *n,
-									int *source,
                   int *connectivity,
                   int *part,
                   int *full,
                   int *print
                  )
 {
-  *seed = SEED; *max_num = MAX_NUM; *n = N; *source = SOURCE, *connectivity = CONNECTIVITY, *part = PART, *full = FULL, *print = PRINT;
+  *seed = SEED; *max_num = MAX_NUM; *n = N; *connectivity = CONNECTIVITY, *part = PART, *full = FULL, *print = PRINT;
   static char * SHORT = "";
 	static struct option OPTS[] =
 																{
                                   {"seed",required_argument,0,'s'},
 																	{"max_num",required_argument,0,'m'},
                                   {"n",required_argument,0,'n'},
-                                  {"source",required_argument,0,'r'},
                                   {"connectivity",required_argument,0,'c'},
                                   {"part",required_argument,0,'t'},
                                   {"full",no_argument,0,'f'},
@@ -71,16 +69,6 @@ void CommLineArgs(int argc,
                 else
                 {
                   *n = N;
-                }
-                break;
-      case 'r':
-                if(isNumber(optarg))
-                {
-                  *source = atoi(optarg);
-                }
-                else
-                {
-                  *source = SOURCE;
                 }
                 break;
       case 'c':

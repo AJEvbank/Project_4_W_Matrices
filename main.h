@@ -51,7 +51,6 @@ void CommLineArgs(int argc,
                   int *seed,
                   int *max_num,
                   int *n,
-									int *source,
                   int *connectivity,
                   int *part,
                   int *full,
@@ -73,5 +72,21 @@ void makeGraphTotal(int n, int * edge, int max_num, int connectivity, int part);
 int addWithInfinity(int A, int B);
 
 int getMax(int world_size);
+
+void getkRowAndCol(MPI_Comm mcw, int n, int k, int * kthCol, int * kthRow);
+
+int getProcessRow(int world_rank, int rootP);
+
+int getProcessCol(int world_rank, int rootP);
+
+int getRowMember(int processRow, int rootP, int index);
+
+int getColMember(int processCol, int rootP, int index);
+
+int getKthRowOrigin(int k, int rootP, int processRow, int slice);
+
+int getKthColOrigin(int k, int rootP, int processCol, int slice);
+
+
 
 #endif
