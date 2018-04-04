@@ -87,6 +87,6 @@ int getKthRowOrigin(int k, int rootP, int processRow, int slice);
 
 int getKthColOrigin(int k, int rootP, int processCol, int slice);
 
-
+void loopOperation(int offset, int level, int * receivedArray, int rootP);
 
 #endif

@@ -21,8 +21,8 @@ int main(int argc, char ** argv)
   slice = n/rootP;
   start = slice * world_rank;
   end = start + slice;
-  int * kthRow = (int *)calloc(n,sizeof(int));
-  int * kthCol = (int *)calloc(n,sizeof(int));
+  int * kthRow = (int *)calloc(n/rootP,sizeof(int));
+  int * kthCol = (int *)calloc(n/rootP,sizeof(int));
 
   printf("n = %d, seed = %d, max_num = %d, connectivity = %d, part = %d, print = %d, full = %d\n\n",
                                                                     n,seed,max_num,connectivity,part,print,full);
