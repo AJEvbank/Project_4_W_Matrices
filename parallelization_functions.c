@@ -14,7 +14,7 @@ void getkRowAndCol(MPI_Comm mcw, int n, int k, int * kthCol, int * kthRow)
   int i,level, offset, sliceTag = 0, distTag = 2, rootP = (int)sqrt((double)world_size);
   int slice = n/rootP, start = world_rank * slice, mySlice = slice, receiver, sender;
   int processRow = getProcessRow(world_rank,rootP), processCol = getProcessCol(world_rank,rootP);
-  int senderStart, senderSlice;
+  int senderStart, senderSlice, myRowIndex, myColIndex;
   int * horizontalSlices = (int *)calloc(rootP,sizeof(int));
   int * verticalSlices = (int *)calloc(rootP,sizeof(int));
   MPI_Status status;
@@ -29,7 +29,9 @@ void getkRowAndCol(MPI_Comm mcw, int n, int k, int * kthCol, int * kthRow)
   for(i = 0; i < rootP; i++)
   {
     kthRowPartners[i] = getRowMember(processRow,rootP,i);
+    if (kthRowPartners[i] == world_rank) myRowIndex = kthRowPartners[i];
     kthColPartners[i] = getColMember(processCol,rootP,i);
+    if (kthColPartners[i] == world_rank) myColIndex = kthColPartners[i];
   }
   kthRowReceived[kthRowOrigin] = 1;
   kthColReceived[kthColOrigin] = 1;
@@ -39,14 +41,15 @@ void getkRowAndCol(MPI_Comm mcw, int n, int k, int * kthCol, int * kthRow)
       level <= max;
       level = level * 2, offset = offset * 2)
   {
+
     // Row ops first.
     if (kthRowReceived[world_rank] == 1)
     {
-      receiver = kthRowPartners[(world_rank + offset) % rootP];
+      receiver = kthRowPartners[(myRowIndex + offset) % rootP];
       if (kthRowReceived[receiver] == 0)
       {
         MPI_Send(kthRow,
-                  rootP,
+                  slice,
                   MPI_INT,
                   receiver,
                   MPI_ANY_TAG,
@@ -55,11 +58,11 @@ void getkRowAndCol(MPI_Comm mcw, int n, int k, int * kthCol, int * kthRow)
     }
     else if (kthRowReceived[world_rank] == 0)
     {
-      sender = kthRowPartners[(world_rank - offset) % rootP];
+      sender = kthRowPartners[((myRowIndex - offset) + rootP) % rootP];
       if (kthRowReceived[sender] == 1)
       {
         MPI_Recv(kthRow,
-                  rootP,
+                  slice,
                   MPI_INT,
                   sender,
                   MPI_ANY_TAG,
@@ -68,15 +71,14 @@ void getkRowAndCol(MPI_Comm mcw, int n, int k, int * kthCol, int * kthRow)
       }
     }
 
-
     // Col ops second.
     if (kthColReceived[world_rank] == 1)
     {
-      receiver = kthColPartners[(world_rank + offset) % rootP];
+      receiver = kthColPartners[(myColIndex + offset) % rootP];
       if (kthColReceived[receiver] == 0)
       {
         MPI_Send(&kthCol,
-                  rootP,
+                  slice,
                   MPI_INT,
                   receiver,
                   MPI_ANY_TAG,
@@ -85,11 +87,11 @@ void getkRowAndCol(MPI_Comm mcw, int n, int k, int * kthCol, int * kthRow)
     }
     else if (kthColReceived[world_rank] == 0)
     {
-      sender = kthColPartners[(world_rank - offset) % rootP];
+      sender = kthColPartners[((myColIndex - offset) + rootP) % rootP];
       if (kthColReceived[sender] == 1)
       {
         MPI_Recv(&kthCol,
-                  rootP,
+                  slice,
                   MPI_INT,
                   sender,
                   MPI_ANY_TAG,
@@ -97,6 +99,7 @@ void getkRowAndCol(MPI_Comm mcw, int n, int k, int * kthCol, int * kthRow)
                   &status);
       }
     }
+
     loopOperation(offset,level,kthRowReceived,rootP);
     loopOperation(offset,level,kthColReceived,rootP);
   }
