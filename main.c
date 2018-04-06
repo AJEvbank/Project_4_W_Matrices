@@ -14,15 +14,15 @@ int main(int argc, char ** argv)
 
   CommLineArgs(argc,argv,&seed,&max_num,&n,&connectivity,&part,&full,&print);
 
-  srand(seed);
+  srand(seed * world_rank);
   rootP = (int)sqrt((double)world_size);
-  int * Origin = (int *)calloc(rootP * rootP,sizeof(int));
-  int * Result = (int *)calloc(rootP * rootP,sizeof(int));
   slice = n/rootP;
   start = slice * world_rank;
   end = start + slice;
-  int * kthRow = (int *)calloc(n/rootP,sizeof(int));
-  int * kthCol = (int *)calloc(n/rootP,sizeof(int));
+  int * Origin = (int *)calloc(slice * slice,sizeof(int));
+  int * Result = (int *)calloc(slice * slice,sizeof(int));
+  int * kthRow = (int *)calloc(slice,sizeof(int));
+  int * kthCol = (int *)calloc(slice,sizeof(int));
 
   printf("n = %d, seed = %d, max_num = %d, connectivity = %d, part = %d, print = %d, full = %d\n\n",
                                                                     n,seed,max_num,connectivity,part,print,full);
@@ -40,23 +40,37 @@ int main(int argc, char ** argv)
 
   int * checkOriginMatrix;
   int * checkResultMatrix;
+  int * checkResultSequential;
   if (world_rank == 0)
   {
     checkOriginMatrix = (int *)calloc(n * n,sizeof(int));
     checkResultMatrix = (int *)calloc(n * n,sizeof(int));
+    checkResultSequential = (int *)calloc(n * n,sizeof(int));
   }
   else {
-    checkOriginMatrix = null;
-    checkResultMatrix = null;
+    checkOriginMatrix = NULL;
+    checkResultMatrix = NULL;
   }
-  ParallelizeMatrix(MCW,Origin,n,rootP,checkOriginMatrix);
+  ParallelizeMatrix(MCW,Origin,slice,checkOriginMatrix);
 
-  printf("checkOriginMatrix:\n");
-  // Parallelize the print function.
-  printGraph(slice,checkOriginMatrix,print);
+  if (world_rank == 0)
+  {
+    printf("checkOriginMatrix:\n");
+    printGraph(n,checkOriginMatrix,print);
+    printf("checkResultMatrix:\n");
+    printGraph(n,checkResultMatrix,print);
+    printf("Origin on %d:\n",world_rank);
+    printGraph(slice,Origin,print);
+  }
+  else {
+    printf("Origin on %d:\n",world_rank);
+    printGraph(slice,Origin,print);
+  }
+
 
   for (k = 0; k < n; k++)
   {
+    printf("%d on world_rank %d\n",k,world_rank);
     // Parallelize kthRow and kthCol here.
     getkRowAndCol(MCW,n,k,kthCol,kthRow);
     for (i = start; i < end; i++)
@@ -79,7 +93,13 @@ int main(int argc, char ** argv)
     }
   }
 
-  ParallelizeMatrix(MCW,Result,n,rootP,checkResultMatrix);
+  printf("Result on %d:\n",world_rank);
+  printGraph(slice,Result,print);
+  printf("Got past main calculations on %d\n",world_rank);
+  ParallelizeMatrix(MCW,Result,slice,checkResultMatrix);
+  printf("checkResultMatrix:\n");
+  printGraph(n,checkResultMatrix,print);
+  printf("Got past ParallelizeMatrix() on %d\n",world_rank);
 
   if (world_rank == 0)
   {
@@ -91,7 +111,7 @@ int main(int argc, char ** argv)
         {
           if (i != j)
           {
-            checkResultMatrix[(i * n) + j] = min(checkOriginMatrix[(i * n) + j],addWithInfinity(checkOriginMatrix[(i * n) + k],
+            checkResultSequential[(i * n) + j] = min(checkOriginMatrix[(i * n) + j],addWithInfinity(checkOriginMatrix[(i * n) + k],
                                                                                                 checkOriginMatrix[(k * n) + j]));
           }
         }
@@ -101,7 +121,7 @@ int main(int argc, char ** argv)
       {
         for (j = 0; j < n; j++)
         {
-          checkOriginMatrix[(i * n) + j] = checkResultMatrix[(i * n) + j];
+          checkOriginMatrix[(i * n) + j] = checkResultSequential[(i * n) + j];
         }
       }
     }
@@ -111,7 +131,7 @@ int main(int argc, char ** argv)
     {
       for (j = 0; j < n; j++)
       {
-        if(Result[(i * n) + j] != checkResultMatrix[(i * n) + j])
+        if(checkResultSequential[(i * n) + j] != checkResultMatrix[(i * n) + j])
         {
           printf("Error found at [%d,%d]\n",i,j);
           isCorrect = 0;
@@ -120,15 +140,22 @@ int main(int argc, char ** argv)
     }
 
     printf("isCorrect = %d\n",isCorrect);
+    printf("checkResultSequential:\n");
+    printGraph(n,checkResultSequential,print);
   }
 
+  printf("Starting free on %d\n",world_rank);
+  // free(Origin);
+  // free(Result);
+  // free(kthCol);
+  // free(kthRow);
+  // if (world_rank == 0)
+  // {
+  //   free(checkOriginMatrix);
+  //   free(checkResultMatrix);
+  //   free(checkResultSequential);
+  // }
 
-  free(Origin);
-  free(Result);
-  free(kthCol);
-  free(kthRow);
-  free(checkOriginMatrix);
-  free(checkResultMatrix);
   MPI_Finalize();
   return 0;
 }

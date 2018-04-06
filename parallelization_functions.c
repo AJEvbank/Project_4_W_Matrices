@@ -11,12 +11,10 @@ void getkRowAndCol(MPI_Comm mcw, int n, int k, int * kthCol, int * kthRow)
   int world_size;
   MPI_Comm_size(mcw, &world_size);
 
-  int i,level, offset, sliceTag = 0, distTag = 2, rootP = (int)sqrt((double)world_size);
-  int slice = n/rootP, start = world_rank * slice, mySlice = slice, receiver, sender;
+  int i, level, offset, rootP = (int)sqrt((double)world_size), tag = 0;
+  int slice = n/rootP, receiver, sender;
   int processRow = getProcessRow(world_rank,rootP), processCol = getProcessCol(world_rank,rootP);
-  int senderStart, senderSlice, myRowIndex, myColIndex;
-  int * horizontalSlices = (int *)calloc(rootP,sizeof(int));
-  int * verticalSlices = (int *)calloc(rootP,sizeof(int));
+  int myRowIndex, myColIndex;
   MPI_Status status;
   int max = getMax(world_size);
   int kthRowOrigin = getKthRowOrigin(k,rootP,processRow,slice);
@@ -52,7 +50,7 @@ void getkRowAndCol(MPI_Comm mcw, int n, int k, int * kthCol, int * kthRow)
                   slice,
                   MPI_INT,
                   receiver,
-                  MPI_ANY_TAG,
+                  tag,
                   mcw);
       }
     }
@@ -81,7 +79,7 @@ void getkRowAndCol(MPI_Comm mcw, int n, int k, int * kthCol, int * kthRow)
                   slice,
                   MPI_INT,
                   receiver,
-                  MPI_ANY_TAG,
+                  tag,
                   mcw);
       }
     }
@@ -103,6 +101,11 @@ void getkRowAndCol(MPI_Comm mcw, int n, int k, int * kthCol, int * kthRow)
     loopOperation(offset,level,kthRowReceived,rootP);
     loopOperation(offset,level,kthColReceived,rootP);
   }
+
+  // free(kthRowPartners);
+  // free(kthColPartners);
+  // free(kthRowReceived);
+  // free(kthColReceived);
   return;
 }
 
@@ -140,7 +143,7 @@ void loopOperation(int offset, int level, int * receivedArray, int rootP)
 {
   int i;
   int * copy = (int *)calloc(rootP,sizeof(int));
-  for (i = 0; i < rootP; i++) { copy[i]=receivedArray[i] }
+  for (i = 0; i < rootP; i++) { copy[i] = receivedArray[i]; }
   for (i = 0; i < rootP; i++)
   {
     if (copy[i] == 1)
@@ -152,21 +155,29 @@ void loopOperation(int offset, int level, int * receivedArray, int rootP)
   return;
 }
 
-void ParallelizeMatrix(MPI_Comm mcw, int * myMatrix, int n, int rootP, int * recv)
+void ParallelizeMatrix(MPI_Comm mcw, int * myMatrix, int slice, int * recv)
 {
   int world_rank;
   MPI_Comm_rank(mcw, &world_rank);
   int world_size;
   MPI_Comm_size(mcw, &world_size);
-  // Where to plug it in?
-  int slice = n/rootp;
+
+  int * recvr;
+  if (world_rank == 0)
+  {
+    recvr = recv;
+  }
+  else
+  {
+    recvr = NULL;
+  }
 
   MPI_Gather(
     myMatrix,
-    slice,
+    slice * slice,
     MPI_INT,
-    recv,
-    slice,
+    recvr,
+    slice * slice,
     MPI_INT,
     0,
     mcw);
