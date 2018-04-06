@@ -16,31 +16,44 @@ int main(int argc, char ** argv)
 
   srand(seed);
   rootP = (int)sqrt((double)world_size);
-  int * W0 = (int *)calloc(rootP * rootP,sizeof(int));
-  int * W = (int *)calloc(rootP * rootP,sizeof(int));
+  int * Origin = (int *)calloc(rootP * rootP,sizeof(int));
+  int * Result = (int *)calloc(rootP * rootP,sizeof(int));
   slice = n/rootP;
   start = slice * world_rank;
   end = start + slice;
-  int * kthRow = (int *)calloc(n,sizeof(int));
-  int * kthCol = (int *)calloc(n,sizeof(int));
+  int * kthRow = (int *)calloc(n/rootP,sizeof(int));
+  int * kthCol = (int *)calloc(n/rootP,sizeof(int));
 
   printf("n = %d, seed = %d, max_num = %d, connectivity = %d, part = %d, print = %d, full = %d\n\n",
                                                                     n,seed,max_num,connectivity,part,print,full);
 
   if (full == 1)
   {
-    makeGraphTotal(slice,W0,max_num,connectivity,part);
+    makeGraphTotal(slice,Origin,max_num,connectivity,part);
   }
   else
   {
-    makeGraph(slice,W0,max_num,connectivity,part);
+    makeGraph(slice,Origin,max_num,connectivity,part);
   }
 
-  makeGraph(slice,W,max_num,0,INF);
+  makeGraph(slice,Result,max_num,0,INF);
 
-  printf("W0:\n");
+  int * checkOriginMatrix;
+  int * checkResultMatrix;
+  if (world_rank == 0)
+  {
+    checkOriginMatrix = (int *)calloc(n * n,sizeof(int));
+    checkResultMatrix = (int *)calloc(n * n,sizeof(int));
+  }
+  else {
+    checkOriginMatrix = null;
+    checkResultMatrix = null;
+  }
+  ParallelizeMatrix(MCW,Origin,n,rootP,checkOriginMatrix);
+
+  printf("checkOriginMatrix:\n");
   // Parallelize the print function.
-  printGraph(slice,W0,print);
+  printGraph(slice,checkOriginMatrix,print);
 
   for (k = 0; k < n; k++)
   {
@@ -52,7 +65,7 @@ int main(int argc, char ** argv)
       {
         if (i != j)
         {
-          W[(i * n) + j] = min(W0[(i * n) + j],addWithInfinity(kthCol[i], kthRow[j]));
+          Result[(i * n) + j] = min(Origin[(i * n) + j],addWithInfinity(kthCol[i], kthRow[j]));
         }
       }
     }
@@ -61,22 +74,61 @@ int main(int argc, char ** argv)
     {
       for (j = start; j < end; j++)
       {
-        W0[(i * n) + j] = W[(i * n) + j];
+        Origin[(i * n) + j] = Result[(i * n) + j];
       }
     }
   }
 
-  printf("\n\n");
-  printf("W0:\n");
-  printGraph(n,W0,print);
-  printf("\n***************************************************************\n");
-  printf("W:\n");
-  printGraph(n,W,print);
+  ParallelizeMatrix(MCW,Result,n,rootP,checkResultMatrix);
 
-  free(W0);
-  free(W);
+  if (world_rank == 0)
+  {
+    for (k = 0; k < n; k++)
+    {
+      for (i = 0; i < n; i++)
+      {
+        for (j = 0; j < n; j++)
+        {
+          if (i != j)
+          {
+            checkResultMatrix[(i * n) + j] = min(checkOriginMatrix[(i * n) + j],addWithInfinity(checkOriginMatrix[(i * n) + k],
+                                                                                                checkOriginMatrix[(k * n) + j]));
+          }
+        }
+      }
+
+      for (i = 0; i < n; i++)
+      {
+        for (j = 0; j < n; j++)
+        {
+          checkOriginMatrix[(i * n) + j] = checkResultMatrix[(i * n) + j];
+        }
+      }
+    }
+
+    int isCorrect = 1;
+    for (i = 0; i < n; i++)
+    {
+      for (j = 0; j < n; j++)
+      {
+        if(Result[(i * n) + j] != checkResultMatrix[(i * n) + j])
+        {
+          printf("Error found at [%d,%d]\n",i,j);
+          isCorrect = 0;
+        }
+      }
+    }
+
+    printf("isCorrect = %d\n",isCorrect);
+  }
+
+
+  free(Origin);
+  free(Result);
   free(kthCol);
   free(kthRow);
+  free(checkOriginMatrix);
+  free(checkResultMatrix);
   MPI_Finalize();
   return 0;
 }
