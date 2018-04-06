@@ -152,30 +152,25 @@ void loopOperation(int offset, int level, int * receivedArray, int rootP)
   return;
 }
 
-void ParallelizeMatrix(mcw, int * myMatrix, int n)
+void ParallelizeMatrix(MPI_Comm mcw, int * myMatrix, int n, int rootP, int * recv)
 {
   int world_rank;
   MPI_Comm_rank(mcw, &world_rank);
   int world_size;
   MPI_Comm_size(mcw, &world_size);
   // Where to plug it in?
-  int level, offset;
-  int max = getMax(world_size);
-  int * buffer = (int *)calloc(n * n,sizeof(int));
-  for(level = 2, offset = 1;
-      level <= max;
-      level = level * 2, offset = offset * 2)
-  {
-    if(world_rank % level == offset)
-    {
-      MPI_Send(&myMatrix,
-                rootP,
-                MPI_INT,
-                receiver,
-                MPI_ANY_TAG,
-                mcw);
-    }
-  }
+  int slice = n/rootp;
+
+  MPI_Gather(
+    myMatrix,
+    slice,
+    MPI_INT,
+    recv,
+    slice,
+    MPI_INT,
+    0,
+    mcw);
+
   return;
 }
 #endif
