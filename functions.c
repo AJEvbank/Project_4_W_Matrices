@@ -102,7 +102,7 @@ void makeGraph(int n, int * graph, int max_num, int connectivity, int part)
 
 void makeGraphTotal(int n, int * graph, int max_num, int connectivity, int part)
 {
-  int i,j,row,col,hasConnectionRow,hasConnectionCol;
+  int i,j,row,col,hasConnectionRow,hasConnectionCol,randA,randB;
   if (connectivity > 0)
   {
     for (i = 0; i < n; i++)
@@ -140,11 +140,15 @@ void makeGraphTotal(int n, int * graph, int max_num, int connectivity, int part)
       }
       if(hasConnectionRow == 0)
       {
-        graph[row + (rand() % n)] = QUAN;
+        randA = (rand() % n);
+        while(randA == i) randA = (rand() % n);
+        graph[row + randA] = QUAN;
       }
       if(hasConnectionCol == 0)
       {
-        graph[((rand() % n) * n) + i] = QUAN;
+        randB = (rand() % n);
+        while(randB == i) randB = (rand() % n);
+        graph[(randB * n) + i] = QUAN;
       }
     }
   }

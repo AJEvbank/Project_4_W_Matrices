@@ -118,10 +118,10 @@ void getkRowAndCol(MPI_Comm mcw, int n, int k, int * kthCol, int * kthRow, int *
     loopOperation(offset,level,kthColReceived,rootP);
   }
 
-  // free(kthRowPartners);
-  // free(kthColPartners);
-  // free(kthRowReceived);
-  // free(kthColReceived);
+  free(kthRowPartners);
+  free(kthColPartners);
+  free(kthRowReceived);
+  free(kthColReceived);
   return;
 }
 
@@ -205,7 +205,7 @@ void ParallelizeMatrix(MPI_Comm mcw, int * myMatrix, int slice, int n, int rootP
                 tag,
                 mcw,
                 &status);
-      for (m = 0; m < slice; i++)
+      for (m = 0; m < slice; m++)
       {
         processRow = getProcessRow(i,rootP);
         row = (processRow * (slice * slice * rootP)) + (rootP * slice * m) + ((i % rootP) * slice);
@@ -225,7 +225,7 @@ void ParallelizeMatrix(MPI_Comm mcw, int * myMatrix, int slice, int n, int rootP
                 mcw);
     }
   }
-
+  free(buffer);
   return;
 }
 #endif

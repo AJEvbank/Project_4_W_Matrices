@@ -24,7 +24,7 @@ int main(int argc, char ** argv)
   int * kthRow = (int *)calloc(slice,sizeof(int));
   int * kthCol = (int *)calloc(slice,sizeof(int));
 
-  printf("n = %d, seed = %d, max_num = %d, connectivity = %d, part = %d, print = %d, full = %d\n\n",
+  if (world_rank == 0) printf("n = %d, seed = %d, max_num = %d, connectivity = %d, part = %d, print = %d, full = %d\n\n",
                                                                     n,seed,max_num,connectivity,part,print,full);
 
   if (full == 1)
@@ -57,8 +57,8 @@ int main(int argc, char ** argv)
   {
     printf("checkOriginMatrix:\n");
     printGraph(n,checkOriginMatrix,print);
-    printf("checkResultMatrix:\n");
-    printGraph(n,checkResultMatrix,print);
+    // printf("checkResultMatrix:\n");
+    // printGraph(n,checkResultMatrix,print);
     printf("Origin on %d:\n",world_rank);
     printGraph(slice,Origin,print);
   }
@@ -68,92 +68,98 @@ int main(int argc, char ** argv)
   }
 
 
-  for (k = 0; k < n; k++)
-  {
-    // Parallelize kthRow and kthCol here.
-    getkRowAndCol(MCW,n,k,kthCol,kthRow,Origin);
-    for (i = start; i < end; i++)
-    {
-      for (j = start; j < end; j++)
-      {
-        if (i != j)
-        {
-          Result[(i * n) + j] = min(Origin[(i * n) + j],addWithInfinity(kthCol[i], kthRow[j]));
-        }
-      }
-    }
+  // for (k = 0; k < n; k++)
+  // {
+  //   // Parallelize kthRow and kthCol here.
+  //   getkRowAndCol(MCW,n,k,kthCol,kthRow,Origin);
+  //
+  //   printf("%d => kthCol: ",world_rank);
+  //   for (i = 0; i < slice; i++)
+  //   {
+  //     printf("%d,",kthCol[i]);
+  //     // for (j = start; j < end; j++)
+  //     // {
+  //     //   if (i != j)
+  //     //   {
+  //     //     //Result[(i * n) + j] = min(Origin[(i * n) + j],addWithInfinity(kthCol[i], kthRow[j]));
+  //     //   }
+  //     // }
+  //   }
+  //   printf("\n");
+  //   printf("%d => kthRow: ",world_rank);
+  //   for (i = 0; i < slice; i++)
+  //   {
+  //     printf("%d,",kthRow[i]);
+  //     // for (j = start; j < end; j++)
+  //     // {
+  //     //   //Origin[(i * n) + j] = Result[(i * n) + j];
+  //     // }
+  //   }
+  //   printf("\n");
+  // }
 
-    for (i = start; i < end; i++)
-    {
-      for (j = start; j < end; j++)
-      {
-        Origin[(i * n) + j] = Result[(i * n) + j];
-      }
-    }
-  }
-
-  printf("Result on %d:\n",world_rank);
-  printGraph(slice,Result,print);
-  ParallelizeMatrix(MCW,Result,slice,n,rootP,checkResultMatrix);
+  // printf("Result on %d:\n",world_rank);
+  // printGraph(slice,Result,print);
+  // ParallelizeMatrix(MCW,Result,slice,n,rootP,checkResultMatrix);
   if (world_rank == 0)
   {
-    printf("checkResultMatrix:\n");
-    printGraph(n,checkResultMatrix,print);
+    // printf("checkResultMatrix:\n");
+    // printGraph(n,checkResultMatrix,print);
   }
 
-  if (world_rank == 0)
-  {
-    for (k = 0; k < n; k++)
-    {
-      for (i = 0; i < n; i++)
-      {
-        for (j = 0; j < n; j++)
-        {
-          if (i != j)
-          {
-            checkResultSequential[(i * n) + j] = min(checkOriginMatrix[(i * n) + j],addWithInfinity(checkOriginMatrix[(i * n) + k],
-                                                                                                checkOriginMatrix[(k * n) + j]));
-          }
-        }
-      }
-
-      for (i = 0; i < n; i++)
-      {
-        for (j = 0; j < n; j++)
-        {
-          checkOriginMatrix[(i * n) + j] = checkResultSequential[(i * n) + j];
-        }
-      }
-    }
-
-    int isCorrect = 1;
-    for (i = 0; i < n; i++)
-    {
-      for (j = 0; j < n; j++)
-      {
-        if(checkResultSequential[(i * n) + j] != checkResultMatrix[(i * n) + j])
-        {
-          printf("Error found at [%d,%d]\n",i,j);
-          isCorrect = 0;
-        }
-      }
-    }
-
-    printf("isCorrect = %d\n",isCorrect);
-    printf("checkResultSequential:\n");
-    printGraph(n,checkResultSequential,print);
-  }
-
-  // free(Origin);
-  // free(Result);
-  // free(kthCol);
-  // free(kthRow);
   // if (world_rank == 0)
   // {
-  //   free(checkOriginMatrix);
-  //   free(checkResultMatrix);
-  //   free(checkResultSequential);
+  //   for (k = 0; k < n; k++)
+  //   {
+  //     for (i = 0; i < n; i++)
+  //     {
+  //       for (j = 0; j < n; j++)
+  //       {
+  //         if (i != j)
+  //         {
+  //           checkResultSequential[(i * n) + j] = min(checkOriginMatrix[(i * n) + j],addWithInfinity(checkOriginMatrix[(i * n) + k],
+  //                                                                                               checkOriginMatrix[(k * n) + j]));
+  //         }
+  //       }
+  //     }
+  //
+  //     for (i = 0; i < n; i++)
+  //     {
+  //       for (j = 0; j < n; j++)
+  //       {
+  //         checkOriginMatrix[(i * n) + j] = checkResultSequential[(i * n) + j];
+  //       }
+  //     }
+  //   }
+  //
+  //   int isCorrect = 1;
+  //   for (i = 0; i < n; i++)
+  //   {
+  //     for (j = 0; j < n; j++)
+  //     {
+  //       if(checkResultSequential[(i * n) + j] != checkResultMatrix[(i * n) + j])
+  //       {
+  //         printf("Error found at [%d,%d]\n",i,j);
+  //         isCorrect = 0;
+  //       }
+  //     }
+  //   }
+  //
+  //   printf("isCorrect = %d\n",isCorrect);
+  //   printf("checkResultSequential:\n");
+  //   printGraph(n,checkResultSequential,print);
   // }
+
+  free(Origin);
+  free(Result);
+  free(kthCol);
+  free(kthRow);
+  if (world_rank == 0)
+  {
+    free(checkOriginMatrix);
+    free(checkResultMatrix);
+    free(checkResultSequential);
+  }
 
   MPI_Finalize();
   return 0;
