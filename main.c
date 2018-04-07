@@ -51,7 +51,7 @@ int main(int argc, char ** argv)
     checkOriginMatrix = NULL;
     checkResultMatrix = NULL;
   }
-  ParallelizeMatrix(MCW,Origin,slice,checkOriginMatrix);
+  ParallelizeMatrix(MCW,Origin,slice,n,rootP,checkOriginMatrix);
 
   if (world_rank == 0)
   {
@@ -70,9 +70,8 @@ int main(int argc, char ** argv)
 
   for (k = 0; k < n; k++)
   {
-    printf("%d on world_rank %d\n",k,world_rank);
     // Parallelize kthRow and kthCol here.
-    getkRowAndCol(MCW,n,k,kthCol,kthRow);
+    getkRowAndCol(MCW,n,k,kthCol,kthRow,Origin);
     for (i = start; i < end; i++)
     {
       for (j = start; j < end; j++)
@@ -95,11 +94,12 @@ int main(int argc, char ** argv)
 
   printf("Result on %d:\n",world_rank);
   printGraph(slice,Result,print);
-  printf("Got past main calculations on %d\n",world_rank);
-  ParallelizeMatrix(MCW,Result,slice,checkResultMatrix);
-  printf("checkResultMatrix:\n");
-  printGraph(n,checkResultMatrix,print);
-  printf("Got past ParallelizeMatrix() on %d\n",world_rank);
+  ParallelizeMatrix(MCW,Result,slice,n,rootP,checkResultMatrix);
+  if (world_rank == 0)
+  {
+    printf("checkResultMatrix:\n");
+    printGraph(n,checkResultMatrix,print);
+  }
 
   if (world_rank == 0)
   {
@@ -144,7 +144,6 @@ int main(int argc, char ** argv)
     printGraph(n,checkResultSequential,print);
   }
 
-  printf("Starting free on %d\n",world_rank);
   // free(Origin);
   // free(Result);
   // free(kthCol);

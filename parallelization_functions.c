@@ -4,7 +4,7 @@
 
 #include "main.h"
 
-void getkRowAndCol(MPI_Comm mcw, int n, int k, int * kthCol, int * kthRow)
+void getkRowAndCol(MPI_Comm mcw, int n, int k, int * kthCol, int * kthRow, int * myOriginMatrix)
 {
   int world_rank;
   MPI_Comm_rank(mcw, &world_rank);
@@ -33,6 +33,22 @@ void getkRowAndCol(MPI_Comm mcw, int n, int k, int * kthCol, int * kthRow)
   }
   kthRowReceived[kthRowOrigin] = 1;
   kthColReceived[kthColOrigin] = 1;
+
+  if (world_rank == kthRowOrigin)
+  {
+    for(i = 0; i < slice; i++)
+    {
+      kthRow[i] = myOriginMatrix[(k * n) + i];
+    }
+  }
+
+  if (world_rank == kthColOrigin)
+  {
+    for(i = 0; i < slice; i++)
+    {
+      kthCol[i] = myOriginMatrix[(i * n) + k];
+    }
+  }
 
   // Initial loop....
   for(level = 2, offset = 1;
@@ -155,32 +171,60 @@ void loopOperation(int offset, int level, int * receivedArray, int rootP)
   return;
 }
 
-void ParallelizeMatrix(MPI_Comm mcw, int * myMatrix, int slice, int * recv)
+void ParallelizeMatrix(MPI_Comm mcw, int * myMatrix, int slice, int n, int rootP, int * recv)
 {
   int world_rank;
   MPI_Comm_rank(mcw, &world_rank);
   int world_size;
   MPI_Comm_size(mcw, &world_size);
 
-  int * recvr;
+  int i,j,m,row, tag = 0, processRow;
+  int * buffer = (int *)calloc(slice * slice,sizeof(int));
+  MPI_Status status;
+
   if (world_rank == 0)
   {
-    recvr = recv;
-  }
-  else
-  {
-    recvr = NULL;
+    for (i = 0; i < slice; i++)
+    {
+      row = rootP * slice * i;
+      for (j = 0; j < slice; j++)
+      {
+        recv[row + j] = myMatrix[(i * slice) + j];
+      }
+    }
   }
 
-  MPI_Gather(
-    myMatrix,
-    slice * slice,
-    MPI_INT,
-    recvr,
-    slice * slice,
-    MPI_INT,
-    0,
-    mcw);
+  for (i = 1; i < world_size; i++)
+  {
+    if (world_rank == 0)
+    {
+      MPI_Recv( buffer,
+                slice * slice,
+                MPI_INT,
+                i,
+                tag,
+                mcw,
+                &status);
+      for (m = 0; m < slice; i++)
+      {
+        processRow = getProcessRow(i,rootP);
+        row = (processRow * (slice * slice * rootP)) + (rootP * slice * m) + ((i % rootP) * slice);
+        for (j = 0; j < slice; j++)
+        {
+          recv[row + j] = buffer[(m * slice) + j];
+        }
+      }
+    }
+    if (world_rank == i)
+    {
+      MPI_Send( myMatrix,
+                slice * slice,
+                MPI_INT,
+                0,
+                tag,
+                mcw);
+    }
+  }
 
   return;
 }

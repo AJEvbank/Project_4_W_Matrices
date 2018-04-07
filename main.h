@@ -73,7 +73,7 @@ int addWithInfinity(int A, int B);
 
 int getMax(int world_size);
 
-void getkRowAndCol(MPI_Comm mcw, int n, int k, int * kthCol, int * kthRow);
+void getkRowAndCol(MPI_Comm mcw, int n, int k, int * kthCol, int * kthRow, int * myOriginMatrix);
 
 int getProcessRow(int world_rank, int rootP);
 
@@ -89,6 +89,6 @@ int getKthColOrigin(int k, int rootP, int processCol, int slice);
 
 void loopOperation(int offset, int level, int * receivedArray, int rootP);
 
-void ParallelizeMatrix(MPI_Comm mcw, int * myMatrix, int slice, int * recv);
+void ParallelizeMatrix(MPI_Comm mcw, int * myMatrix, int slice, int n, int rootP, int * recv);
 
 #endif
