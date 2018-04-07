@@ -61,6 +61,8 @@ int isNumber(const char * str);
 
 void printGraph(int n, int * graph, int print);
 
+void printArray(int * array, int length);
+
 int min(int i, int j);
 
 int isConnected(int connectivity, int part);
@@ -71,7 +73,7 @@ void makeGraphTotal(int n, int * edge, int max_num, int connectivity, int part);
 
 int addWithInfinity(int A, int B);
 
-int getMax(int world_size);
+int getMax(int size);
 
 void getkRowAndCol(MPI_Comm mcw, int n, int k, int * kthCol, int * kthRow, int * myOriginMatrix);
 

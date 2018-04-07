@@ -39,6 +39,16 @@ void printGraph(int n, int * graph, int print)
   return;
 }
 
+void printArray(int * array, int length)
+{
+  int i;
+  for(i = 0; i < length; i++)
+  {
+    printf("%d,",array[i]);
+  }
+  return;
+}
+
 int min(int i, int j)
 {
   if (i < j)
@@ -182,10 +192,10 @@ int addWithInfinity(int A, int B)
   }
 }
 
-int getMax(int world_size)
+int getMax(int size)
 {
   int max = 2;
-  while (max < world_size)
+  while (max < size)
   {
     max *= 2;
   }
