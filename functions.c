@@ -49,6 +49,18 @@ void printArray(int * array, int length)
   return;
 }
 
+void printValue(int value)
+{
+  if (value == INF)
+  {
+    printf("--,");
+  }
+  else
+  {
+    printf("%d,",value);
+  }
+}
+
 int min(int i, int j)
 {
   if (i < j)

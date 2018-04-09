@@ -71,17 +71,13 @@ int main(int argc, char ** argv)
     // Parallelize kthRow and kthCol here.
     getkRowAndCol(MCW,n,k,kthCol,kthRow,Origin);
 
-    // printf("%d => kthCol: ",world_rank);
-    // for (i = 0; i < slice; i++)
-    // {
-    //   if (kthCol[i] == INF)
-    //   {
-    //     printf("--,");
-    //   }
-    //   else
-    //   {
-    //     printf("%d,",kthCol[i]);
-    //   }
+    if(DB2) printf("%d => kthCol: ",world_rank);
+    for (i = 0; i < slice; i++)
+    {
+          if(DB2)
+          {
+            printValue(kthCol[i]);
+          }
     //
     //   // for (j = start; j < end; j++)
     //   // {
@@ -90,28 +86,27 @@ int main(int argc, char ** argv)
     //   //     //Result[(i * n) + j] = min(Origin[(i * n) + j],addWithInfinity(kthCol[i], kthRow[j]));
     //   //   }
     //   // }
-    // }
-    // printf("\n");
-    // printf("%d => kthRow: ",world_rank);
-    // for (i = 0; i < slice; i++)
-    // {
-    //   if (kthRow[i] == INF)
-    //   {
-    //     printf("--,");
-    //   }
-    //   else
-    //   {
-    //     printf("%d,",kthRow[i]);
-    //   }
+    }
+    if(DB2)
+    {
+      printf("\n");
+      printf("%d => kthRow: ",world_rank);
+    }
+    for (i = 0; i < slice; i++)
+    {
+          if(DB2)
+          {
+            printValue(kthRow[i]);
+         }
     //
     //   // for (j = start; j < end; j++)
     //   // {
     //   //   //Origin[(i * n) + j] = Result[(i * n) + j];
     //   // }
-    // }
-    // printf("\n");
+    }
+    if(DB2) printf("\n");
 
-    if(k == 1) break;
+    // if(k == 0) break;
   }
 
   // printf("Result on %d:\n",world_rank);

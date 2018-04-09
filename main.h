@@ -25,11 +25,10 @@
 #define INF (int)INFINITY
 #define FULL 0
 
+#define DB1 0
+#define DB2 k == 3
 
 
-// #define TIME 0
-// #define CORRECT 0
-// #define CHECK printf("Check on world_rank %d\n",world_rank);
 
 // (int)(((double)rand())/((double)RAND_MAX) * 32)
 // u++
@@ -62,6 +61,8 @@ int isNumber(const char * str);
 void printGraph(int n, int * graph, int print);
 
 void printArray(int * array, int length);
+
+void printValue(int value);
 
 int min(int i, int j);
 
