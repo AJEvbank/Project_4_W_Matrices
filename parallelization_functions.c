@@ -50,13 +50,15 @@ void getkRowAndCol(MPI_Comm mcw, int n, int k, int * kthCol, int * kthRow, int *
     }
   }
 
-  printf("kthRowReceived on iteration -1 on %d:\n",world_rank);
-  printArray(kthRowReceived,rootP);
-  printf("\n");
-  printf("kthColReceived on iteration -1 on %d:\n",world_rank);
-  printArray(kthColReceived,rootP);
-  printf("\n");
-
+  if(world_rank == 0)
+  {
+    printf("kthRowReceived on iteration -1 on %d:\n",world_rank);
+    printArray(kthRowReceived,rootP);
+    printf("\n");
+    printf("kthColReceived on iteration -1 on %d:\n",world_rank);
+    printArray(kthColReceived,rootP);
+    printf("\n");
+  }
   // Comm loop...
   for(level = 2, offset = 1;
       level <= max;
@@ -124,12 +126,15 @@ void getkRowAndCol(MPI_Comm mcw, int n, int k, int * kthCol, int * kthRow, int *
     loopOperation(offset,level,kthRowReceived,rootP);
     loopOperation(offset,level,kthColReceived,rootP);
 
-    printf("kthRowReceived on offset %d on %d:\n",offset,world_rank);
-    printArray(kthRowReceived,rootP);
-    printf("\n");
-    printf("kthColReceived on offset %d on %d:\n",offset,world_rank);
-    printArray(kthColReceived,rootP);
-    printf("\n");
+    if (world_rank == 0)
+    {
+      printf("kthRowReceived on offset %d on %d:\n",offset,world_rank);
+      printArray(kthRowReceived,rootP);
+      printf("\n");
+      printf("kthColReceived on offset %d on %d:\n",offset,world_rank);
+      printArray(kthColReceived,rootP);
+      printf("\n");
+    }
   }
 
   free(kthRowPartners);
