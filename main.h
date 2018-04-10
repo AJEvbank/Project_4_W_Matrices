@@ -26,7 +26,7 @@
 #define FULL 0
 
 #define DB1 0
-#define DB2 k == 3
+#define DB2 0
 
 
 
@@ -77,6 +77,8 @@ int addWithInfinity(int A, int B);
 int getMax(int size);
 
 void getkRowAndCol(MPI_Comm mcw, int n, int k, int * kthCol, int * kthRow, int * myOriginMatrix);
+
+int isDiagonalProcess(int world_rank, int world_size);
 
 int getProcessRow(int world_rank, int rootP);
 

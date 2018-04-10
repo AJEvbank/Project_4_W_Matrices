@@ -10,15 +10,16 @@ int main(int argc, char ** argv)
 
 
 
-  int n, i, j, k, seed, max_num, connectivity, print, part, full, rootP, slice, start, end;
+  int n, i, j, k, seed, max_num, connectivity, print, part, full, rootP, slice, isDiagProcess;
 
   CommLineArgs(argc,argv,&seed,&max_num,&n,&connectivity,&part,&full,&print);
 
   srand(seed * world_rank);
   rootP = (int)sqrt((double)world_size);
   slice = n/rootP;
-  start = slice * world_rank;
-  end = start + slice;
+  isDiagProcess = isDiagonalProcess(world_rank,rootP);
+  // int start = slice * world_rank;
+  // int end = start + slice;
   int * Origin = (int *)calloc(slice * slice,sizeof(int));
   int * Result = (int *)calloc(slice * slice,sizeof(int));
   int * kthRow = (int *)calloc(slice,sizeof(int));
@@ -74,18 +75,22 @@ int main(int argc, char ** argv)
     if(DB2) printf("%d => kthCol: ",world_rank);
     for (i = 0; i < slice; i++)
     {
-          if(DB2)
-          {
-            printValue(kthCol[i]);
-          }
-    //
-    //   // for (j = start; j < end; j++)
-    //   // {
-    //   //   if (i != j)
-    //   //   {
-    //   //     //Result[(i * n) + j] = min(Origin[(i * n) + j],addWithInfinity(kthCol[i], kthRow[j]));
-    //   //   }
-    //   // }
+      if(DB2)
+      {
+        printValue(kthCol[i]);
+      }
+
+      for (j = 0; j < slice; j++)
+      {
+        if (isDiagProcess && i != j)
+        {
+          Result[(i * slice) + j] = min(Origin[(i * slice) + j],addWithInfinity(kthCol[i], kthRow[j]));
+        }
+        else if (!isDiagProcess)
+        {
+          Result[(i * slice) + j] = min(Origin[(i * slice) + j],addWithInfinity(kthCol[i], kthRow[j]));
+        }
+      }
     }
     if(DB2)
     {
@@ -94,15 +99,15 @@ int main(int argc, char ** argv)
     }
     for (i = 0; i < slice; i++)
     {
-          if(DB2)
-          {
-            printValue(kthRow[i]);
-         }
-    //
-    //   // for (j = start; j < end; j++)
-    //   // {
-    //   //   //Origin[(i * n) + j] = Result[(i * n) + j];
-    //   // }
+      if(DB2)
+      {
+        printValue(kthRow[i]);
+      }
+
+      for (j = 0; j < slice; j++)
+      {
+        Origin[(i * slice) + j] = Result[(i * slice) + j];
+      }
     }
     if(DB2) printf("\n");
 
@@ -111,55 +116,63 @@ int main(int argc, char ** argv)
 
   // printf("Result on %d:\n",world_rank);
   // printGraph(slice,Result,print);
-  // ParallelizeMatrix(MCW,Result,slice,n,rootP,checkResultMatrix);
+  ParallelizeMatrix(MCW,Result,slice,n,rootP,checkResultMatrix);
   if (world_rank == 0)
   {
-    // printf("checkResultMatrix:\n");
-    // printGraph(n,checkResultMatrix,print);
+    printf("checkResultMatrix:\n");
+    printGraph(n,checkResultMatrix,print);
   }
 
-  // if (world_rank == 0)
-  // {
-  //   for (k = 0; k < n; k++)
-  //   {
-  //     for (i = 0; i < n; i++)
-  //     {
-  //       for (j = 0; j < n; j++)
-  //       {
-  //         if (i != j)
-  //         {
-  //           checkResultSequential[(i * n) + j] = min(checkOriginMatrix[(i * n) + j],addWithInfinity(checkOriginMatrix[(i * n) + k],
-  //                                                                                               checkOriginMatrix[(k * n) + j]));
-  //         }
-  //       }
-  //     }
-  //
-  //     for (i = 0; i < n; i++)
-  //     {
-  //       for (j = 0; j < n; j++)
-  //       {
-  //         checkOriginMatrix[(i * n) + j] = checkResultSequential[(i * n) + j];
-  //       }
-  //     }
-  //   }
-  //
-  //   int isCorrect = 1;
-  //   // for (i = 0; i < n; i++)
-  //   // {
-  //   //   for (j = 0; j < n; j++)
-  //   //   {
-  //   //     if(checkResultSequential[(i * n) + j] != checkResultMatrix[(i * n) + j])
-  //   //     {
-  //   //       printf("Error found at [%d,%d]\n",i,j);
-  //   //       isCorrect = 0;
-  //   //     }
-  //   //   }
-  //   // }
-  //
-  //   printf("isCorrect = %d\n",isCorrect);
-  //   printf("checkResultSequential:\n");
-  //   printGraph(n,checkResultSequential,print);
-  // }
+  if (world_rank == 0)
+  {
+    for (k = 0; k < n; k++)
+    {
+      for (i = 0; i < n; i++)
+      {
+        for (j = 0; j < n; j++)
+        {
+          if (i != j)
+          {
+            checkResultSequential[(i * n) + j] = min(checkOriginMatrix[(i * n) + j],addWithInfinity(checkOriginMatrix[(i * n) + k],
+                                                                                                checkOriginMatrix[(k * n) + j]));
+          }
+        }
+      }
+
+      for (i = 0; i < n; i++)
+      {
+        for (j = 0; j < n; j++)
+        {
+          checkOriginMatrix[(i * n) + j] = checkResultSequential[(i * n) + j];
+        }
+      }
+    }
+
+    int isCorrect = 1;
+    for (i = 0; i < n; i++)
+    {
+      for (j = 0; j < n; j++)
+      {
+        if(checkResultSequential[(i * n) + j] != checkResultMatrix[(i * n) + j])
+        {
+          printf("Error found at [%d,%d]\n",i,j);
+          isCorrect = 0;
+        }
+      }
+    }
+
+    printf("checkResultSequential:\n");
+    printGraph(n,checkResultSequential,print);
+    printf("\n\n");
+    if(isCorrect == 1)
+    {
+      printf("The result is correct.\n\n");
+    }
+    else
+    {
+      printf("The result is not correct.\n\n");
+    }
+  }
 
   free(Origin);
   free(Result);

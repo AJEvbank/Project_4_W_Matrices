@@ -164,6 +164,18 @@ void getkRowAndCol(MPI_Comm mcw, int n, int k, int * kthCol, int * kthRow, int *
   return;
 }
 
+int isDiagonalProcess(int world_rank, int rootp)
+{
+  if ((world_rank % rootp) == (world_rank / rootp))
+  {
+    return 1;
+  }
+  else
+  {
+    return 0;
+  }
+}
+
 int getProcessRow(int world_rank, int rootP)
 {
   return (world_rank / rootP);
