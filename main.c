@@ -10,21 +10,22 @@ int main(int argc, char ** argv)
 
 
 
-  int n, i, j, k, seed, max_num, connectivity, print, part, full, rootP, slice, start, end;
+  int n, i, j, k, seed, max_num, connectivity, print, part, full, rootP, slice, isDiagProcess;
 
   CommLineArgs(argc,argv,&seed,&max_num,&n,&connectivity,&part,&full,&print);
 
   srand(seed * world_rank);
   rootP = (int)sqrt((double)world_size);
   slice = n/rootP;
-  start = slice * world_rank;
-  end = start + slice;
+  isDiagProcess = isDiagonalProcess(world_rank,rootP);
+  // int start = slice * world_rank;
+  // int end = start + slice;
   int * Origin = (int *)calloc(slice * slice,sizeof(int));
   int * Result = (int *)calloc(slice * slice,sizeof(int));
   int * kthRow = (int *)calloc(slice,sizeof(int));
   int * kthCol = (int *)calloc(slice,sizeof(int));
 
-  printf("n = %d, seed = %d, max_num = %d, connectivity = %d, part = %d, print = %d, full = %d\n\n",
+  if (world_rank == 0) printf("n = %d, seed = %d, max_num = %d, connectivity = %d, part = %d, print = %d, full = %d\n\n",
                                                                     n,seed,max_num,connectivity,part,print,full);
 
   if (full == 1)
@@ -46,6 +47,7 @@ int main(int argc, char ** argv)
     checkOriginMatrix = (int *)calloc(n * n,sizeof(int));
     checkResultMatrix = (int *)calloc(n * n,sizeof(int));
     checkResultSequential = (int *)calloc(n * n,sizeof(int));
+    makeGraph(n,checkResultSequential,max_num,0,INF);
   }
   else {
     checkOriginMatrix = NULL;
@@ -57,43 +59,63 @@ int main(int argc, char ** argv)
   {
     printf("checkOriginMatrix:\n");
     printGraph(n,checkOriginMatrix,print);
-    printf("checkResultMatrix:\n");
-    printGraph(n,checkResultMatrix,print);
-    printf("Origin on %d:\n",world_rank);
-    printGraph(slice,Origin,print);
+    // printf("checkResultMatrix:\n");
+    // printGraph(n,checkResultMatrix,print);
+
   }
-  else {
-    printf("Origin on %d:\n",world_rank);
-    printGraph(slice,Origin,print);
-  }
+  // printf("Origin on %d:\n",world_rank);
+  // printGraph(slice,Origin,print);
 
 
   for (k = 0; k < n; k++)
   {
     // Parallelize kthRow and kthCol here.
     getkRowAndCol(MCW,n,k,kthCol,kthRow,Origin);
-    for (i = start; i < end; i++)
+
+    if(DB2) printf("%d => kthCol: ",world_rank);
+    for (i = 0; i < slice; i++)
     {
-      for (j = start; j < end; j++)
+      if(DB2)
       {
-        if (i != j)
+        printValue(kthCol[i]);
+      }
+
+      for (j = 0; j < slice; j++)
+      {
+        if (isDiagProcess && i != j)
         {
-          Result[(i * n) + j] = min(Origin[(i * n) + j],addWithInfinity(kthCol[i], kthRow[j]));
+          Result[(i * slice) + j] = min(Origin[(i * slice) + j],addWithInfinity(kthCol[i], kthRow[j]));
+        }
+        else if (!isDiagProcess)
+        {
+          Result[(i * slice) + j] = min(Origin[(i * slice) + j],addWithInfinity(kthCol[i], kthRow[j]));
         }
       }
     }
-
-    for (i = start; i < end; i++)
+    if(DB2)
     {
-      for (j = start; j < end; j++)
+      printf("\n");
+      printf("%d => kthRow: ",world_rank);
+    }
+    for (i = 0; i < slice; i++)
+    {
+      if(DB2)
       {
-        Origin[(i * n) + j] = Result[(i * n) + j];
+        printValue(kthRow[i]);
+      }
+
+      for (j = 0; j < slice; j++)
+      {
+        Origin[(i * slice) + j] = Result[(i * slice) + j];
       }
     }
+    if(DB2) printf("\n");
+
+    // if(k == 0) break;
   }
 
-  printf("Result on %d:\n",world_rank);
-  printGraph(slice,Result,print);
+  // printf("Result on %d:\n",world_rank);
+  // printGraph(slice,Result,print);
   ParallelizeMatrix(MCW,Result,slice,n,rootP,checkResultMatrix);
   if (world_rank == 0)
   {
@@ -139,21 +161,29 @@ int main(int argc, char ** argv)
       }
     }
 
-    printf("isCorrect = %d\n",isCorrect);
     printf("checkResultSequential:\n");
     printGraph(n,checkResultSequential,print);
+    printf("\n\n");
+    if(isCorrect == 1)
+    {
+      printf("The result is correct.\n\n");
+    }
+    else
+    {
+      printf("The result is not correct.\n\n");
+    }
   }
 
-  // free(Origin);
-  // free(Result);
-  // free(kthCol);
-  // free(kthRow);
-  // if (world_rank == 0)
-  // {
-  //   free(checkOriginMatrix);
-  //   free(checkResultMatrix);
-  //   free(checkResultSequential);
-  // }
+  free(Origin);
+  free(Result);
+  free(kthCol);
+  free(kthRow);
+  if (world_rank == 0)
+  {
+    free(checkOriginMatrix);
+    free(checkResultMatrix);
+    free(checkResultSequential);
+  }
 
   MPI_Finalize();
   return 0;

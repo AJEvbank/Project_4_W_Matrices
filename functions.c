@@ -39,6 +39,28 @@ void printGraph(int n, int * graph, int print)
   return;
 }
 
+void printArray(int * array, int length)
+{
+  int i;
+  for(i = 0; i < length; i++)
+  {
+    printf("%d,",array[i]);
+  }
+  return;
+}
+
+void printValue(int value)
+{
+  if (value == INF)
+  {
+    printf("--,");
+  }
+  else
+  {
+    printf("%d,",value);
+  }
+}
+
 int min(int i, int j)
 {
   if (i < j)
@@ -102,7 +124,7 @@ void makeGraph(int n, int * graph, int max_num, int connectivity, int part)
 
 void makeGraphTotal(int n, int * graph, int max_num, int connectivity, int part)
 {
-  int i,j,row,col,hasConnectionRow,hasConnectionCol;
+  int i,j,row,col,hasConnectionRow,hasConnectionCol,randA,randB;
   if (connectivity > 0)
   {
     for (i = 0; i < n; i++)
@@ -140,11 +162,15 @@ void makeGraphTotal(int n, int * graph, int max_num, int connectivity, int part)
       }
       if(hasConnectionRow == 0)
       {
-        graph[row + (rand() % n)] = QUAN;
+        randA = (rand() % n);
+        while(randA == i) randA = (rand() % n);
+        graph[row + randA] = QUAN;
       }
       if(hasConnectionCol == 0)
       {
-        graph[((rand() % n) * n) + i] = QUAN;
+        randB = (rand() % n);
+        while(randB == i) randB = (rand() % n);
+        graph[(randB * n) + i] = QUAN;
       }
     }
   }
@@ -178,10 +204,10 @@ int addWithInfinity(int A, int B)
   }
 }
 
-int getMax(int world_size)
+int getMax(int size)
 {
   int max = 2;
-  while (max < world_size)
+  while (max < size)
   {
     max *= 2;
   }
