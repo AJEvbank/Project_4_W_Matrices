@@ -60,6 +60,7 @@ int main(int argc, char ** argv)
   }
 
 
+  // Parallel execution of the algorithm.
   for (k = 0; k < n; k++)
   {
     // Parallelize kthRow and kthCol here.
@@ -97,6 +98,7 @@ int main(int argc, char ** argv)
     printGraph(n,checkResultParallel,print);
   }
 
+  // Sequential execution of the algorithm on process 0.
   if (world_rank == 0)
   {
     for (k = 0; k < n; k++)
@@ -122,6 +124,7 @@ int main(int argc, char ** argv)
       }
     }
 
+    // Compare the results and display the differences.
     int isCorrect = 1;
     for (i = 0; i < n; i++)
     {
