@@ -38,18 +38,18 @@ int main(int argc, char ** argv)
   makeGraph(slice,Result,max_num,0,INF);
 
   int * checkOriginMatrix;
-  int * checkResultMatrix;
+  int * checkResultParallel;
   int * checkResultSequential;
   if (world_rank == 0)
   {
     checkOriginMatrix = (int *)calloc(n * n,sizeof(int));
-    checkResultMatrix = (int *)calloc(n * n,sizeof(int));
+    checkResultParallel = (int *)calloc(n * n,sizeof(int));
     checkResultSequential = (int *)calloc(n * n,sizeof(int));
     makeGraph(n,checkResultSequential,max_num,0,INF);
   }
   else {
     checkOriginMatrix = NULL;
-    checkResultMatrix = NULL;
+    checkResultParallel = NULL;
   }
   ParallelizeMatrix(MCW,Origin,slice,n,rootP,checkOriginMatrix);
 
@@ -90,11 +90,11 @@ int main(int argc, char ** argv)
   }
 
 
-  ParallelizeMatrix(MCW,Result,slice,n,rootP,checkResultMatrix);
+  ParallelizeMatrix(MCW,Result,slice,n,rootP,checkResultParallel);
   if (world_rank == 0 && print)
   {
-    printf("checkResultMatrix:\n");
-    printGraph(n,checkResultMatrix,print);
+    printf("checkResultParallel:\n");
+    printGraph(n,checkResultParallel,print);
   }
 
   if (world_rank == 0)
@@ -127,7 +127,7 @@ int main(int argc, char ** argv)
     {
       for (j = 0; j < n; j++)
       {
-        if(checkResultSequential[(i * n) + j] != checkResultMatrix[(i * n) + j])
+        if(checkResultSequential[(i * n) + j] != checkResultParallel[(i * n) + j])
         {
           if (print == 1) printf("Error found at [%d,%d]\n",i,j);
           isCorrect = 0;
@@ -159,7 +159,7 @@ int main(int argc, char ** argv)
   if (world_rank == 0)
   {
     free(checkOriginMatrix);
-    free(checkResultMatrix);
+    free(checkResultParallel);
     free(checkResultSequential);
   }
 
