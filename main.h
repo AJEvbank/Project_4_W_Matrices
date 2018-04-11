@@ -80,18 +80,6 @@ void getkRowAndCol(MPI_Comm mcw, int n, int k, int * kthCol, int * kthRow, int *
 
 int isDiagonalProcess(int world_rank, int world_size);
 
-int getProcessRow(int world_rank, int rootP);
-
-int getProcessCol(int world_rank, int rootP);
-
-int getRowMember(int processRow, int rootP, int index);
-
-int getColMember(int processCol, int rootP, int index);
-
-int getKthRowOrigin(int k, int rootP, int processRow, int slice);
-
-int getKthColOrigin(int k, int rootP, int processCol, int slice);
-
 void loopOperation(int offset, int level, int * receivedArray, int rootP);
 
 void ParallelizeMatrix(MPI_Comm mcw, int * myMatrix, int slice, int n, int rootP, int * recv);

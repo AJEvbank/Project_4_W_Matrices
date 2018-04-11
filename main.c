@@ -18,8 +18,6 @@ int main(int argc, char ** argv)
   rootP = (int)sqrt((double)world_size);
   slice = n/rootP;
   isDiagProcess = isDiagonalProcess(world_rank,rootP);
-  // int start = slice * world_rank;
-  // int end = start + slice;
   int * Origin = (int *)calloc(slice * slice,sizeof(int));
   int * Result = (int *)calloc(slice * slice,sizeof(int));
   int * kthRow = (int *)calloc(slice,sizeof(int));
@@ -55,16 +53,11 @@ int main(int argc, char ** argv)
   }
   ParallelizeMatrix(MCW,Origin,slice,n,rootP,checkOriginMatrix);
 
-  if (world_rank == 0)
+  if (world_rank == 0 && print == 1)
   {
     printf("checkOriginMatrix:\n");
     printGraph(n,checkOriginMatrix,print);
-    // printf("checkResultMatrix:\n");
-    // printGraph(n,checkResultMatrix,print);
-
   }
-  // printf("Origin on %d:\n",world_rank);
-  // printGraph(slice,Origin,print);
 
 
   for (k = 0; k < n; k++)
@@ -72,14 +65,8 @@ int main(int argc, char ** argv)
     // Parallelize kthRow and kthCol here.
     getkRowAndCol(MCW,n,k,kthCol,kthRow,Origin);
 
-    if(DB2) printf("%d => kthCol: ",world_rank);
     for (i = 0; i < slice; i++)
     {
-      if(DB2)
-      {
-        printValue(kthCol[i]);
-      }
-
       for (j = 0; j < slice; j++)
       {
         if (isDiagProcess && i != j)
@@ -92,32 +79,19 @@ int main(int argc, char ** argv)
         }
       }
     }
-    if(DB2)
-    {
-      printf("\n");
-      printf("%d => kthRow: ",world_rank);
-    }
+
     for (i = 0; i < slice; i++)
     {
-      if(DB2)
-      {
-        printValue(kthRow[i]);
-      }
-
       for (j = 0; j < slice; j++)
       {
         Origin[(i * slice) + j] = Result[(i * slice) + j];
       }
     }
-    if(DB2) printf("\n");
-
-    // if(k == 0) break;
   }
 
-  // printf("Result on %d:\n",world_rank);
-  // printGraph(slice,Result,print);
+
   ParallelizeMatrix(MCW,Result,slice,n,rootP,checkResultMatrix);
-  if (world_rank == 0)
+  if (world_rank == 0 && print)
   {
     printf("checkResultMatrix:\n");
     printGraph(n,checkResultMatrix,print);
@@ -155,15 +129,19 @@ int main(int argc, char ** argv)
       {
         if(checkResultSequential[(i * n) + j] != checkResultMatrix[(i * n) + j])
         {
-          printf("Error found at [%d,%d]\n",i,j);
+          if (print == 1) printf("Error found at [%d,%d]\n",i,j);
           isCorrect = 0;
         }
       }
     }
 
-    printf("checkResultSequential:\n");
-    printGraph(n,checkResultSequential,print);
-    printf("\n\n");
+    if (print == 1)
+    {
+      printf("checkResultSequential:\n");
+      printGraph(n,checkResultSequential,print);
+      printf("\n\n");
+    }
+
     if(isCorrect == 1)
     {
       printf("The result is correct.\n\n");

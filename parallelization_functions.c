@@ -10,13 +10,11 @@ void getkRowAndCol(MPI_Comm mcw, int n, int k, int * kthCol, int * kthRow, int *
   MPI_Comm_rank(mcw, &world_rank);
   int world_size;
   MPI_Comm_size(mcw, &world_size);
-
-  int i, level, offset, rootP = (int)sqrt((double)world_size), tag = 0;
-  int slice = n/rootP, receiver, sender;
-  int processRow = world_rank / rootP, processCol = world_rank % rootP;
-  int myRowIndex, myColIndex, receiverIndex, senderIndex;
-  int originProc = k / slice;
   MPI_Status status;
+
+  int i, level, offset, myRowIndex, myColIndex, receiverIndex, senderIndex, receiver, sender;
+  int rootP = (int)sqrt((double)world_size);
+  int slice = n/rootP, processRow = world_rank / rootP, processCol = world_rank % rootP, tag = 0, originProc = k / slice;
   int max = getMax(rootP);
   int * kthRowPartners = (int *)calloc(rootP,sizeof(int));
   int * kthColPartners = (int *)calloc(rootP,sizeof(int));
@@ -32,16 +30,6 @@ void getkRowAndCol(MPI_Comm mcw, int n, int k, int * kthCol, int * kthRow, int *
   }
   kthRowReceived[originProc] = 1;
   kthColReceived[originProc] = 1;
-
-  if(DB1)
-  {
-    printf("kthRowPartners on %d:\t",world_rank);
-    printArray(kthRowPartners,rootP);
-    printf("\n");
-    printf("kthColPartners on %d:\t",world_rank);
-    printArray(kthColPartners,rootP);
-    printf("\n");
-  }
 
   if (world_rank == kthRowPartners[originProc])
   {
@@ -59,23 +47,11 @@ void getkRowAndCol(MPI_Comm mcw, int n, int k, int * kthCol, int * kthRow, int *
     }
   }
 
-  if(DB1)
-  {
-    printf("myColIndex = %d and myRowIndex = %d on %d\n",myColIndex,myRowIndex,world_rank);
-    printf("kthRowReceived on iteration -1 on %d:\t",world_rank);
-    printArray(kthRowReceived,rootP);
-    printf("\n");
-    printf("kthColReceived on iteration -1 on %d:\t",world_rank);
-    printArray(kthColReceived,rootP);
-    printf("\n");
-  }
-
   // Comm loop...
   for(level = 2, offset = 1;
       level <= max;
       level = level * 2, offset = offset * 2)
   {
-
     // Row ops first.
     if (kthRowReceived[myRowIndex] == 1)
     {
@@ -89,7 +65,6 @@ void getkRowAndCol(MPI_Comm mcw, int n, int k, int * kthCol, int * kthRow, int *
                   receiver,
                   tag,
                   mcw);
-        if(DB1) printf("%d sending to %d on offset = %d\n",world_rank,receiver,offset);
       }
     }
     else if (kthRowReceived[myRowIndex] == 0)
@@ -105,10 +80,8 @@ void getkRowAndCol(MPI_Comm mcw, int n, int k, int * kthCol, int * kthRow, int *
                   MPI_ANY_TAG,
                   mcw,
                   &status);
-        if(DB1) printf("%d receiving from %d on offset = %d\n",world_rank,sender,offset);
       }
     }
-
     // Col ops second.
     if (kthColReceived[myColIndex] == 1)
     {
@@ -122,8 +95,6 @@ void getkRowAndCol(MPI_Comm mcw, int n, int k, int * kthCol, int * kthRow, int *
                   receiver,
                   tag,
                   mcw);
-        if(DB1) printf("%d sending to %d on offset = %d\n",
-                                world_rank,receiver,offset);
       }
     }
     else if (kthColReceived[myColIndex] == 0)
@@ -139,22 +110,10 @@ void getkRowAndCol(MPI_Comm mcw, int n, int k, int * kthCol, int * kthRow, int *
                   MPI_ANY_TAG,
                   mcw,
                   &status);
-        if(DB1) printf("%d receiving from %d on offset = %d\n",world_rank,sender,offset);
       }
     }
-
     loopOperation(offset,level,kthRowReceived,rootP);
     loopOperation(offset,level,kthColReceived,rootP);
-
-    if (DB1)
-    {
-      printf("kthRowReceived on offset %d on %d:\t",offset,world_rank);
-      printArray(kthRowReceived,rootP);
-      printf("\n");
-      printf("kthColReceived on offset %d on %d:\t",offset,world_rank);
-      printArray(kthColReceived,rootP);
-      printf("\n");
-    }
   }
 
   free(kthRowPartners);
@@ -174,36 +133,6 @@ int isDiagonalProcess(int world_rank, int rootp)
   {
     return 0;
   }
-}
-
-int getProcessRow(int world_rank, int rootP)
-{
-  return (world_rank / rootP);
-}
-
-int getProcessCol(int world_rank, int rootP)
-{
-  return (world_rank % rootP);
-}
-
-int getRowMember(int processRow, int rootP, int index)
-{
-  return ((processRow * rootP) + index);
-}
-
-int getColMember(int processCol, int rootP, int index)
-{
-  return ((rootP * index) + processCol);
-}
-
-int getKthRowOrigin(int k, int rootP, int processRow, int slice)
-{
-  return getRowMember(processRow,rootP,k / slice);
-}
-
-int getKthColOrigin(int k, int rootP, int processCol, int slice)
-{
-  return getColMember(processCol,rootP,k / slice);
 }
 
 void loopOperation(int offset, int level, int * receivedArray, int rootP)
@@ -258,7 +187,7 @@ void ParallelizeMatrix(MPI_Comm mcw, int * myMatrix, int slice, int n, int rootP
                 &status);
       for (m = 0; m < slice; m++)
       {
-        processRow = getProcessRow(i,rootP);
+        processRow = (i / rootP);
         row = (processRow * (slice * slice * rootP)) + (rootP * slice * m) + ((i % rootP) * slice);
         for (j = 0; j < slice; j++)
         {
