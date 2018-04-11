@@ -28,8 +28,6 @@
 #define DB1 0
 #define DB2 0
 
-
-
 // (int)(((double)rand())/((double)RAND_MAX) * 32)
 // u++
 // Note: max size of int = +2147483647

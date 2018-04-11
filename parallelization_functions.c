@@ -208,4 +208,5 @@ void ParallelizeMatrix(MPI_Comm mcw, int * myMatrix, int slice, int n, int rootP
   free(buffer);
   return;
 }
+
 #endif
