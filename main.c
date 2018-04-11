@@ -124,7 +124,7 @@ int main(int argc, char ** argv)
       }
     }
 
-    // Compare the results and display the differences.
+    // Compare the results and display any differences.
     int isCorrect = 1;
     for (i = 0; i < n; i++)
     {
